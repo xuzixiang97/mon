@@ -31,7 +31,7 @@ public class HelloController {
     public String hello1() throws IOException {
 
         String html = XuHttpUtil.getHtml("https://www.footlocker.com/en/product/~/J5423500.html");
-        AnalysisUtil.parseFlusProductDetail(html);
+        AnalysisUtil.parseDetail(html);
         return "aaa";
     }
 

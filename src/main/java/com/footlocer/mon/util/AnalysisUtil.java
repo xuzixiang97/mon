@@ -21,11 +21,12 @@ public class AnalysisUtil {
 
 
     //设置Proxy并返回
-    public static String parseFlusProductDetail(String html) throws IOException {
+    public static String parseFlusProductBaseDetail(String html) throws IOException {
 
             Document doc = Jsoup.parse(html);
 
             Elements ee = doc.getElementsByTag("script");
+        Elements dd = doc.getElementsByTag("body");
 
             String text = "";
 
@@ -40,21 +41,27 @@ public class AnalysisUtil {
 
             }
 
-//        //String reg = "<script data-react-helmet=\"true\" type=\"application/ld+json\" id=\"productLdJson\">(.*?)</script>";//定义正则表达式
-//        String pattern = "(<script data-react-helmet=\"true\" type=\"application/ld+json\" id=\"productLdJson\">)(.*?)(</script>)";
-//        Pattern r = Pattern.compile(pattern);
-//        // 创建 matcher 对象
-//        Matcher m = r.matcher(html);
-//        while (m.find()) {
-//            /*
-//             自动遍历打印所有结果   group方法打印捕获的组内容，以正则的括号角标从1开始计算，我们这里要第2个括号里的
-//             值， 所以取 m.group(2)， m.group(0)取整个表达式的值，如果越界取m.group(4),则抛出异常
-//           */
-//            System.out.println("Found value: " + m.group(2));
-//        }
 
         return html;
     }
 
+
+    public static String parseDetail(String html) throws IOException {
+
+        Document doc = Jsoup.parse(html);
+
+        Elements ee = doc.getElementsByTag("script");
+        Elements dd = doc.getElementsByTag("body");
+
+
+        for ( Element d : dd ) {
+            Elements script = d.getElementsByTag("script");
+           //获取第一个里面的信息
+        }
+
+
+
+        return html;
+    }
 
 }
