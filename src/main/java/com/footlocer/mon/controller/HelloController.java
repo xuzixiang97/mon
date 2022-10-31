@@ -1,10 +1,16 @@
 package com.footlocer.mon.controller;
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.poi.excel.ExcelReader;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.footlocer.mon.dto.FootlocerBaseInfo;
+import com.footlocer.mon.dto.Item;
+import com.footlocer.mon.dto.Offers;
 import com.footlocer.mon.dto.StockInfo;
 import com.footlocer.mon.util.AnalysisUtil;
+import com.footlocer.mon.util.ExcleUtil;
 import com.footlocer.mon.util.XuHttpUtil;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,43 +35,56 @@ public class HelloController {
     @GetMapping("/test1")
     public void hello1(HttpServletResponse response) throws IOException {
 
-        List<StockInfo> list = new ArrayList<>();
+        List<StockInfo> resultlist = new ArrayList<>();
+
+        //读取 货号列表
+        List<Item> itemList = readExcel();
+
+        for (Item item : itemList) {
+
+            String skuIrl = "https://www.footlocker.com/en/product/~/"+ item.getSku()+".html";
+            // todo 换代理  读取代理文件
+            String html = XuHttpUtil.getHtml(skuIrl);
+            FootlocerBaseInfo footlocerBaseInfo = AnalysisUtil.parseFlusProductBaseDetail(html);
+
+            StringBuilder sizeList = new StringBuilder();
+
+            if(footlocerBaseInfo != null && footlocerBaseInfo.getOffers() != null){
+                for (Offers offer : footlocerBaseInfo.getOffers()) {
+                    if(offer.getAvailability().equals("InStock")){
+                        sizeList.append(StrUtil.removePrefix(item.getSku(), item.getSku() + "-")).append(",");
+                    }
+                }
+            }
+
+            //构建 list 输出结果
+            resultlist.add(StockInfo.builder().sku(footlocerBaseInfo.getSku())
+                            .size(sizeList.toString())
+                    .build());
+
+        }
 
 
-        // todo 读取列表
-        // todo 换代理
-        String html = XuHttpUtil.getHtml("https://www.footlocker.com/en/product/~/J5423500.html");
-        FootlocerBaseInfo footlocerBaseInfo = AnalysisUtil.parseFlusProductBaseDetail(html);
+        //输出 html
+        ExcleUtil.exportFootlocer(resultlist, response);
 
 
-
-        list.add(StockInfo.builder().sku(footlocerBaseInfo.getSku()).build());
-
+    }
 
 
-        //在内存操作，写到浏览器
-        ExcelWriter writer= ExcelUtil.getWriter(true);
+    private List<Item> readExcel() throws FileNotFoundException {
+        File file=new File("C:\\Users\\Administrator\\Desktop\\test.xlsx");
 
-        //自定义标题别名
-        writer.addHeaderAlias("sku","货号");
-        writer.addHeaderAlias("size","尺码");
+        // 1.获取上传文件输入流
+        InputStream inputStream = new FileInputStream(file);
+        // 2.应用HUtool ExcelUtil获取ExcelReader指定输入流和sheet
+        ExcelReader excelReader = ExcelUtil.getReader(inputStream, "footlocker");
+        // 可以加上表头验证
+        // 3.读取第二行到最后一行数据
+        List<Item> items = excelReader.readAll(Item.class);
 
 
-        //默认配置
-        writer.write(list,true);
-        //设置content—type
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset:utf-8");
-
-        //设置标题
-        String fileName= URLEncoder.encode("用户信息","UTF-8");
-        //Content-disposition是MIME协议的扩展，MIME协议指示MIME用户代理如何显示附加的文件。
-        response.setHeader("Content-Disposition","attachment;filename="+fileName+".xlsx");
-        ServletOutputStream outputStream= response.getOutputStream();
-
-        //将Writer刷新到OutPut
-        writer.flush(outputStream,true);
-        outputStream.close();
-        writer.close();
+        return items;
     }
 
 

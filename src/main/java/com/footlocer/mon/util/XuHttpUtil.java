@@ -14,10 +14,10 @@ public class XuHttpUtil {
 
         // 构建传入代理连接的ip、port和用户名密码
         List<String> authList = new ArrayList<>();
-        String hostname="101.49.178.11";
-        String  port = "11089";
-        String authUser = "xuxuImail0715";
-        String authPassword = "5YMlQ4lU";
+        String hostname="us-30m.geosurf.io";
+        String  port = "8000";
+        String authUser = "626761+US+626761-333565885050";
+        String authPassword = "ieYdzl";
         authList.add(0,hostname);
         authList.add(1,port);
         authList.add(2,authUser);
