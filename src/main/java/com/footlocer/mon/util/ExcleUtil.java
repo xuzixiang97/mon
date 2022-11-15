@@ -21,7 +21,9 @@ public class ExcleUtil {
 
         //自定义标题别名
         writer.addHeaderAlias("sku","货号");
-        writer.addHeaderAlias("size","尺码");
+        writer.addHeaderAlias("footlockerSize","flus");
+        writer.addHeaderAlias("champssportSize","csus");
+        writer.addHeaderAlias("kidSize","kid");
 
 
         //默认配置

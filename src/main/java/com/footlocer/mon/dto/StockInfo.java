@@ -8,5 +8,7 @@ import lombok.Data;
 public class StockInfo {
 
     private String sku;
-    private String size;
+    private String footlockerSize;
+    private String champssportSize;
+    private String kidSize;
 }

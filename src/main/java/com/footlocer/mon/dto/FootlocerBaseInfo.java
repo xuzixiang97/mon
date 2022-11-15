@@ -14,6 +14,8 @@ public class FootlocerBaseInfo {
     private String model;
     private String sku;
     private String url;
+
+    private String sizeSum;
     @JsonProperty("itemCondition")
     private String itemcondition;
     private List<Offers> offers;
@@ -81,4 +83,11 @@ public class FootlocerBaseInfo {
         return offers;
     }
 
+    public String getSizeSum() {
+        return sizeSum;
+    }
+
+    public void setSizeSum(String sizeSum) {
+        this.sizeSum = sizeSum;
+    }
 }
