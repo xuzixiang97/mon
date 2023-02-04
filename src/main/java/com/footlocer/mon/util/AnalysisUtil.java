@@ -1,5 +1,6 @@
 package com.footlocer.mon.util;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.footlocer.mon.dto.FootlocerBaseInfo;
 import org.jsoup.Jsoup;
@@ -15,6 +16,9 @@ public class AnalysisUtil {
     //设置Proxy并返回
     public static FootlocerBaseInfo parseFlusProductBaseDetail(String html) throws IOException {
 
+        if(StrUtil.isEmpty(html)){
+            return  null;
+        }
             Document doc = Jsoup.parse(html);
 
             Elements ee = doc.getElementsByTag("script");

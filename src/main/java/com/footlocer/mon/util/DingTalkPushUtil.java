@@ -1,5 +1,6 @@
 package com.footlocer.mon.util;
 
+import cn.hutool.core.date.DateUnit;
 import com.alibaba.fastjson.JSONObject;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
@@ -12,7 +13,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 public class DingTalkPushUtil {
 
@@ -61,6 +64,7 @@ public class DingTalkPushUtil {
     }
 
     public static void push2(FootlocerBaseInfo footlocerBaseInfo) throws ApiException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/robot/send?access_token=a506139f365bc2665e845b2abcbbc312b133c1b19718db37540e53353809fe3f");
         OapiRobotSendRequest request = new OapiRobotSendRequest();
         request.setMsgtype("markdown");
@@ -69,7 +73,7 @@ public class DingTalkPushUtil {
         markdown.setText("#### monit"+footlocerBaseInfo.getUrl()+"\n" +
                 "> 尺码信息"+ footlocerBaseInfo.getSizeSum()+"\n\n" +
                 "> ![screenshot]("+ footlocerBaseInfo.getImage() +")\n"  +
-                "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n");
+                "> ###### "+ sdf.format(new Date()) +" [页面]("+footlocerBaseInfo.getUrl()+") \n");
         request.setMarkdown(markdown);
         OapiRobotSendResponse response = client.execute(request);
     }

@@ -131,6 +131,18 @@ public class HelloController {
         return items;
     }
 
+
+    private List<Item> readExcel2() throws FileNotFoundException {
+        File file=new File("C:\\Users\\Administrator\\Desktop\\monit.xlsx");
+        // 1.获取上传文件输入流
+        InputStream inputStream = new FileInputStream(file);
+        // 2.应用HUtool ExcelUtil获取ExcelReader指定输入流和sheet
+        ExcelReader excelReader = ExcelUtil.getReader(inputStream, "footlocker");
+        // 可以加上表头验证
+        // 3.读取第二行到最后一行数据
+        List<Item> items = excelReader.readAll(Item.class);
+        return items;
+    }
     @GetMapping("/test2")
     public String queryGoat(String name) throws Exception {
 
@@ -172,7 +184,7 @@ public class HelloController {
         List<StockInfo> resultlist = new ArrayList<>();
 
         //读取 货号列表
-        List<Item> itemList = readExcel();
+        List<Item> itemList = readExcel2();
         for (Item item : itemList) {
 
             //处理footlocker 页面货号
