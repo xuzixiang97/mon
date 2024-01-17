@@ -1,0 +1,8 @@
+server:
+  port: 8089
+
+
+touch:
+  username: xuzi
+  password: sssd
+  usd: 7.15
