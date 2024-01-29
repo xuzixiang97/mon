@@ -53,13 +53,13 @@ public class CodeGenerator {
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
         dsc.setUrl("jdbc:mysql://139.224.131.2:3306/test?useUnicode=true&characterEncoding=utf8");        // dsc.setSchemaName("public");
-        dsc.setDriverName("com.mysql.cj.jdbc.Driver");
+        dsc.setDriverName("com.mysql.jdbc.Driver");
         dsc.setUsername("root");
         dsc.setPassword("datac.com");
         mpg.setDataSource(dsc);
 // 包配置
         PackageConfig pc = new PackageConfig();
-        pc.setParent("com.footlocker.mon")
+        pc.setParent("com.footlocer.mon")
                 .setEntity("entity")
                 .setMapper("mapper")
                 .setService("service")

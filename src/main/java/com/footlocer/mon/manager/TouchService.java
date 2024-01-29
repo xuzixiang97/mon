@@ -1,4 +1,4 @@
-package com.footlocer.mon.service;
+package com.footlocer.mon.manager;
 
 
 import cn.hutool.http.HttpUtil;
@@ -7,9 +7,18 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.footlocer.mon.config.TouchProperties;
 import com.footlocer.mon.dto.touch.*;
+import com.footlocer.mon.entity.CnData;
+import com.footlocer.mon.entity.ShoeExcle;
+import com.footlocer.mon.entity.StockxData;
+import com.footlocer.mon.service.ICnDataService;
+import com.footlocer.mon.service.IShoeExcleService;
+import com.footlocer.mon.service.IStockxDataService;
 import com.footlocer.mon.util.PriceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.*;
 
@@ -21,6 +30,18 @@ public class TouchService {
 
     @Autowired
     private PriceUtil priceUtil;
+
+    @Autowired
+    private IShoeExcleService shoeExcleService;
+
+    @Autowired
+    private ICnDataService cnDataService;
+
+    @Autowired
+    private IStockxDataService stockxDataService;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 获取touch的账号密码
@@ -50,8 +71,15 @@ public class TouchService {
             String url = "https://win.touchtouch.cc/api/getAllPrice?sku=" + sku + "&prices[]=%7B%22name%22:%22price1%22,%22type%22:%22stockxPrice%22,%22region%22:%22US%22%7D&prices[]=%7B%22name%22:%22price2%22,%22type%22:%22cnPrice%22,%22region%22:%22CN%22%7D";
             String result = HttpUtil.createGet(url).addHeaders(headers).execute().body();
             TouchList touchList = JSONObject.parseObject(result, TouchList.class);
-            List<ShoeExcle> shoeExcles = comparePrices(touchList.getList());
-            res.addAll(shoeExcles);
+            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+                @Override
+                protected void doInTransactionWithoutResult(TransactionStatus status) {
+                    // 输出差价信息
+                    List<ShoeExcle> shoeExcles = comparePrices(touchList.getList());
+                }
+            });
+
+            //res.addAll(shoeExcles);
             //加入间隔  随机休息
             try {
                 int sleepTime = new Random().nextInt(21) + 10; // Random value between 10 to 30
@@ -66,20 +94,35 @@ public class TouchService {
 
     private List<ShoeExcle> comparePrices(List<Shoe> shoes) {
         List<ShoeExcle> shoeExcleList = new ArrayList<>();
-        for (Shoe shoe : shoes) {
-            List<StockXData> stockXDataList = shoe.getStockxData();
-            List<CNData> cnDataList = shoe.getCnData();
+        //String jobName = UUID.randomUUID().toString();
+        String jobName = "1-25正式";
 
-            for (StockXData stockXData : stockXDataList) {
-                for (CNData cnData : cnDataList) {
+        for (Shoe shoe : shoes) {
+            List<StockxData> stockXDataList = shoe.getStockxData();
+            for (StockxData stockxData : stockXDataList) {
+                stockxData.setSku(shoe.getSku());
+                stockxData.setJobName(jobName);
+            }
+            List<CnData> cnDataList = shoe.getCnData();
+            for (CnData cnData : cnDataList) {
+                cnData.setSku(shoe.getSku());
+                cnData.setJobName(jobName);
+            }
+            cnDataService.saveBatch(cnDataList);
+            stockxDataService.saveBatch(stockXDataList);
+
+            for (StockxData stockXData : stockXDataList) {
+                for (CnData cnData : cnDataList) {
                     if (formatDouble(stockXData.getSize()).equals(cnData.getSizeUS())) {
                         // 计算差价
                         double stockxGive = priceUtil.calculateStockx(stockXData.getPriceUS());
-                        double dewuGive = priceUtil.calculateDewu(cnData.getPtPrice());
+                        double dewuGive = priceUtil.calculateDewu(cnData.getPtPrice() != 0 ? cnData.getPtPrice() : cnData.getPlusPrice());
 
                         double priceDifference = stockxGive - dewuGive;
 
-                        if(priceDifference > 30 && dewuGive > 0){
+                        //if (priceDifference > 30 && dewuGive > 0)
+                        if (dewuGive > 0) {
+
                             // 输出差价信息
                             System.out.println("货号：" + shoe.getSku() +
                                     ", 三日销量: " + stockXData.getSalesAmount() +
@@ -87,13 +130,22 @@ public class TouchService {
                                     ", StockX 到手: $" + stockxGive +
                                     ", 得物到手: $" + dewuGive +
                                     ", 差价: $" + priceDifference);
+
                             ShoeExcle shoeExcle = new ShoeExcle();
-                            shoeExcle.setSku(shoe.getSku());
+                            shoeExcle.setSku(shoe.getSku().replace(" ", "-"));
+                            shoeExcle.setJobName(jobName);
+                            shoeExcle.setJobName(jobName);
                             shoeExcle.setSaleAmount(stockXData.getSalesAmount());
+                            shoeExcle.setStockxPrice(stockXData.getPriceUS());
                             shoeExcle.setStockxHandPrice(stockxGive);
+                            shoeExcle.setDewuPrice(cnData.getPtPrice() != 0 ? cnData.getPtPrice() : cnData.getPlusPrice());
                             shoeExcle.setDewuHandPrice(dewuGive);
                             shoeExcle.setPriceDifference(priceDifference);
-                            shoeExcleList.add(shoeExcle);
+                            shoeExcle.setCreateTime(new Date());
+
+                            shoeExcleService.save(shoeExcle);
+                            // 如果发生异常，事务会回滚
+
                         }
                     }
                 }

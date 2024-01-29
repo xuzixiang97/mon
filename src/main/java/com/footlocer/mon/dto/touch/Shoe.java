@@ -1,5 +1,7 @@
 package com.footlocer.mon.dto.touch;
 
+import com.footlocer.mon.entity.CnData;
+import com.footlocer.mon.entity.StockxData;
 import lombok.Data;
 
 import java.util.List;
@@ -14,9 +16,9 @@ public class Shoe {
     private int specialDisplayPriceCents;
     // 销售数量
     private int soldAmount;
-    private List<StockXData> stockxData;
+    private List<StockxData> stockxData;
     private String stockxStatus;
-    private List<CNData> cnData;
+    private List<CnData> cnData;
     private String cnStatus;
 
     // Getters and setters for each field

@@ -23,6 +23,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -129,6 +135,12 @@
             <version>1.4.7</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+
         <!--mybatis-plus 代码生成器依赖-->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -141,7 +153,11 @@
             <artifactId>freemarker</artifactId>
         </dependency>
 
-
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.49</version>
+        </dependency>
 
 
     </dependencies>

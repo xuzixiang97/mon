@@ -1,5 +1,24 @@
 server:
   port: 8089
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://139.224.131.2:3306/test?useUnicode=true&characterEncoding=utf8
+    username: root
+    password: datac.com
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+  typeAliasesPackage: com.footlocer.mon.entity
+  mapperLocations: classpath:mapper/*Mapper.xml
+
 
 
 touch:

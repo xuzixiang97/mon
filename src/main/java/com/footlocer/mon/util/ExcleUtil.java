@@ -2,14 +2,12 @@ package com.footlocer.mon.util;
 
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
-import com.footlocer.mon.dto.FootlocerBaseInfo;
 import com.footlocer.mon.dto.StockInfo;
-import com.footlocer.mon.dto.touch.ShoeExcle;
+import com.footlocer.mon.entity.ShoeExcle;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
