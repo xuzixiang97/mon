@@ -27,6 +27,10 @@ public class ShoeExcle implements Serializable {
 
     private String sku;
 
+    private String sizeUs;
+
+    private String sizeCn;
+
     private Integer stockxPrice;
 
     private Double stockxHandPrice;

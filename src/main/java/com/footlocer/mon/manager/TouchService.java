@@ -10,9 +10,11 @@ import com.footlocer.mon.dto.touch.*;
 import com.footlocer.mon.entity.CnData;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.StockxData;
+import com.footlocer.mon.entity.TouchSku;
 import com.footlocer.mon.service.ICnDataService;
 import com.footlocer.mon.service.IShoeExcleService;
 import com.footlocer.mon.service.IStockxDataService;
+import com.footlocer.mon.service.ITouchSkuService;
 import com.footlocer.mon.util.PriceUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,9 @@ public class TouchService {
 
     @Autowired
     private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private ITouchSkuService touchSkuService;
 
     /**
      * 获取touch的账号密码
@@ -134,7 +139,8 @@ public class TouchService {
                             ShoeExcle shoeExcle = new ShoeExcle();
                             shoeExcle.setSku(shoe.getSku().replace(" ", "-"));
                             shoeExcle.setJobName(jobName);
-                            shoeExcle.setJobName(jobName);
+                            shoeExcle.setSizeUs(cnData.getSizeUS());
+                            shoeExcle.setSizeCn(cnData.getSize());
                             shoeExcle.setSaleAmount(stockXData.getSalesAmount());
                             shoeExcle.setStockxPrice(stockXData.getPriceUS());
                             shoeExcle.setStockxHandPrice(stockxGive);
@@ -144,8 +150,12 @@ public class TouchService {
                             shoeExcle.setCreateTime(new Date());
 
                             shoeExcleService.save(shoeExcle);
-                            // 如果发生异常，事务会回滚
 
+                            //更新状态
+                            touchSkuService.lambdaUpdate()
+                                    .eq(TouchSku::getSku, shoe.getSku()
+                                            .replace(" ", "-"))
+                                    .set(TouchSku::getUpdateTime, new Date());
                         }
                     }
                 }
