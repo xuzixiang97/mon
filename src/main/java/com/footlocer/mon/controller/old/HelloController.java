@@ -11,7 +11,7 @@ import com.footlocer.mon.dto.Offers;
 import com.footlocer.mon.dto.StockInfo;
 import com.footlocer.mon.util.*;
 import com.taobao.api.ApiException;
-import io.github.bonigarcia.wdm.WebDriverManager;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;

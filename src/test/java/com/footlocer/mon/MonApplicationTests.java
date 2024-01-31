@@ -5,15 +5,25 @@ import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
 import com.footlocer.mon.manager.TouchService;
 import com.footlocer.mon.service.ITouchSkuService;
+import com.footlocer.mon.util.ChromeDriverUtil;
 import com.footlocer.mon.util.ExcleUtil;
 import com.footlocer.mon.util.TxtUtil;
+import com.footlocer.mon.util.XuHttpUtil;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,5 +88,20 @@ class MonApplicationTests {
         List<String> skuList = touchSkuList.stream().map(TouchSku::getSku).collect(Collectors.toList());
         List<ShoeExcle> check = touchService.check(skuList);
     }
+
+    @Test
+    void test6() throws IOException, InterruptedException {
+        System.setProperty("webdriver.chrome.driver","C:\\Program Files\\Google\\Chrome\\Application\\chromedriver.exe");
+        WebDriver driver= new ChromeDriver(new ChromeDriverService.Builder().usingPort(64534).build());
+        driver.get("https://www.bootteer.com/user/order/index.html");
+
+    }
+
+    @Test
+    void test46() throws IOException, InterruptedException {
+        ChromeDriverUtil build = ChromeDriverUtil.build("https://www.footlocker.com/category/new-arrivals.html");
+
+    }
+
 
 }
