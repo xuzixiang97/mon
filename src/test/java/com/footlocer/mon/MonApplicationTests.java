@@ -55,7 +55,6 @@ class MonApplicationTests {
     }
 
 
-
     @Test
     void contextLoads1() {
     }
@@ -66,7 +65,7 @@ class MonApplicationTests {
         skuList.add("AQ9129-103");
         skuList.add("378038-170");
 
-       //List<String> skuList = TxtUtil.readTxtFile("D:\\bot\\出口\\skuAll.txt");
+        //List<String> skuList = TxtUtil.readTxtFile("D:\\bot\\出口\\skuAll.txt");
         List<ShoeExcle> check = touchService.check(skuList);
     }
 
@@ -91,15 +90,26 @@ class MonApplicationTests {
 
     @Test
     void test6() throws IOException, InterruptedException {
-        System.setProperty("webdriver.chrome.driver","C:\\Program Files\\Google\\Chrome\\Application\\chromedriver.exe");
-        WebDriver driver= new ChromeDriver(new ChromeDriverService.Builder().usingPort(64534).build());
-        driver.get("https://www.bootteer.com/user/order/index.html");
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\xuzixiang\\AppData\\Local\\Google\\Chrome\\Application\\chromedriver.exe");
+        // 谷歌驱动
+        ChromeOptions options = new ChromeOptions();
+        // 允许所有请求
+        options.addArguments("--remote-allow-origins=*");
+
+        options.addArguments("--incognito") ; //无痕模式
+        options.addArguments("--user-agent=" + "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        ChromeDriver webDriver = new ChromeDriver(options);
+        // 启动需要打开的网页
+        webDriver.navigate().to("https://www.baidu.com");
 
     }
 
     @Test
-    void test46() throws IOException, InterruptedException {
-        ChromeDriverUtil build = ChromeDriverUtil.build("https://www.footlocker.com/category/new-arrivals.html");
+    void test64() throws IOException, InterruptedException {
+        ChromeDriverUtil build = ChromeDriverUtil.build("C:\\Users\\xuzixiang\\AppData\\Local\\Google\\Chrome\\Application\\chromedriver.exe");
+        ChromeDriver driver = build.getDriver();
+        driver.navigate().to("https://www.bilibili.com/anime");
+
 
     }
 
