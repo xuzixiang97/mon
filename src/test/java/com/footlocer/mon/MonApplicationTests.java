@@ -108,7 +108,10 @@ class MonApplicationTests {
     void test64() throws IOException, InterruptedException {
         ChromeDriverUtil build = ChromeDriverUtil.build("C:\\Users\\xuzixiang\\AppData\\Local\\Google\\Chrome\\Application\\chromedriver.exe");
         ChromeDriver driver = build.getDriver();
-        driver.navigate().to("https://www.bilibili.com/anime");
+        driver.get("\n" +
+                "https://www.finishline.com");
+        String pageSource = driver.getPageSource();
+        System.out.println(pageSource);
 
 
     }

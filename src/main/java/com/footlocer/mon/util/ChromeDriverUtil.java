@@ -45,11 +45,11 @@ public class ChromeDriverUtil {
         //        if (!pd) {
 //            options.addArguments("--headless"); //无浏览器模式
 //        }
-        options.addArguments("--disable-gpu"); // 谷歌文档提到需要加上这个属性来规避bug
-        options.addArguments("--disable-software-rasterizer"); //禁用3D软件光栅化器
+     //   options.addArguments("--disable-gpu"); // 谷歌文档提到需要加上这个属性来规避bug
+    //    options.addArguments("--disable-software-rasterizer"); //禁用3D软件光栅化器
 //        options.addArguments("--no-sandbox");// 为了让linux root用户也能执行
 //        // 优化参数
-        options.addArguments("--disable-dev-shm-usage"); //解决在某些VM环境中，/dev/shm分区太小，导致Chrome失败或崩溃
+       // options.addArguments("--disable-dev-shm-usage"); //解决在某些VM环境中，/dev/shm分区太小，导致Chrome失败或崩溃
 //        if (img) {
 //            options.addArguments("blink-settings=imagesEnabled=false"); //禁止加图片,如果爬取图片的话,这个不能禁用
 //            options.addArguments("--disable-images");
@@ -69,11 +69,11 @@ public class ChromeDriverUtil {
         //options.addArguments("--user-data-dir=" + file1.getAbsolutePath()); //解决打开页面出现data;空白页面情况,因为没有缓存目录
        // options.addArguments("--disk-cache-dir=" + file2.getAbsolutePath()); //指定Cache路径
         options.addArguments("--incognito") ; //无痕模式
-        options.addArguments("--disable-plugins"); //禁用插件,加快速度
-        options.addArguments("--disable-extensions"); //禁用扩展
-        options.addArguments("--disable-popup-blocking"); //关闭弹窗拦截
-        options.addArguments("--ignore-certificate-errors"); //  禁现窗口最大化
-        options.addArguments("--allow-running-insecure-content");  //关闭https提示 32位
+        //options.addArguments("--disable-plugins"); //禁用插件,加快速度
+        //options.addArguments("--disable-extensions"); //禁用扩展
+        //options.addArguments("--disable-popup-blocking"); //关闭弹窗拦截
+      //  options.addArguments("--ignore-certificate-errors"); //  禁现窗口最大化
+      //  options.addArguments("--allow-running-insecure-content");  //关闭https提示 32位
         options.addArguments("--disable-infobars");  //禁用浏览器正在被自动化程序控制的提示  ,但是高版本不生效
 //
 //        if (!pd) {
@@ -83,7 +83,7 @@ public class ChromeDriverUtil {
 //            options.addArguments("window-size=" + screenWidth + "," + screenHeight);
 //        }
         //随机设置请求头
-        options.addArguments("--user-agent=" + "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        options.addArguments("--user-agent=" + "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
 //        proxy(options, false); //设置代理 ,true 开启代理
         driver = new ChromeDriver(options);//实例化
 //        if (pd) {
