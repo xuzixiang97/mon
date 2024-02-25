@@ -11,5 +11,10 @@ public class TouchProperties {
 
     private double usd;
 
+    private String token1;
+
+    private String user1;
+
+
 }
 

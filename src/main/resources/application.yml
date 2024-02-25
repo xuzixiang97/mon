@@ -25,3 +25,6 @@ touch:
   username: xuzi
   password: sssd
   usd: 7.15
+  #token user
+  token1: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTc2ZjBhM2FiN2MyNDE4NTVjZGM0NTciLCJ1c2VybmFtZSI6IuiKnOa5liIsImlzQWRtaW4iOmZhbHNlLCJhdXRoIjp0cnVlLCJkaXNhYmxlZCI6ZmFsc2UsImlhdCI6MTcwODQ3MTMwMSwiZXhwIjoxNzExMDYzMzAxfQ.2tycd2REKWURzID9lXnnDDZbec_yA2QIZT5Srb25gN8
+  user1: 6576f0a3ab7c241855cdc457

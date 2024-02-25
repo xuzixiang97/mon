@@ -4,6 +4,7 @@ import cn.hutool.http.HttpUtil;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
 import com.footlocer.mon.manager.TouchService;
+import com.footlocer.mon.manager.TouchUpdateService;
 import com.footlocer.mon.service.ITouchSkuService;
 import com.footlocer.mon.util.ChromeDriverUtil;
 import com.footlocer.mon.util.ExcleUtil;
@@ -36,6 +37,9 @@ class MonApplicationTests {
 
     @Autowired
     private ITouchSkuService touchSkuService;
+
+    @Autowired
+    private TouchUpdateService touchUpdateService;
 
     @Test
     void contextLoads() {
@@ -96,7 +100,7 @@ class MonApplicationTests {
         // 允许所有请求
         options.addArguments("--remote-allow-origins=*");
 
-        options.addArguments("--incognito") ; //无痕模式
+        options.addArguments("--incognito"); //无痕模式
         options.addArguments("--user-agent=" + "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
         ChromeDriver webDriver = new ChromeDriver(options);
         // 启动需要打开的网页
@@ -113,6 +117,12 @@ class MonApplicationTests {
         String pageSource = driver.getPageSource();
         System.out.println(pageSource);
 
+
+    }
+
+    @Test
+    void testupdate() throws IOException, InterruptedException {
+        List<ShoeExcle> shoeExcles = touchUpdateService.checkGuaShouList();
 
     }
 
