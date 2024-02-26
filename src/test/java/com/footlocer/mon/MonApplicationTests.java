@@ -10,6 +10,7 @@ import com.footlocer.mon.util.ChromeDriverUtil;
 import com.footlocer.mon.util.ExcleUtil;
 import com.footlocer.mon.util.TxtUtil;
 import com.footlocer.mon.util.XuHttpUtil;
+import com.taobao.api.ApiException;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
@@ -121,7 +122,7 @@ class MonApplicationTests {
     }
 
     @Test
-    void testupdate() throws IOException, InterruptedException {
+    void testupdate() throws IOException, InterruptedException, ApiException {
         List<ShoeExcle> shoeExcles = touchUpdateService.checkGuaShouList();
 
     }

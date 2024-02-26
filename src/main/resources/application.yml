@@ -14,7 +14,8 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+   # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: null
 
   typeAliasesPackage: com.footlocer.mon.entity
   mapperLocations: classpath:mapper/*Mapper.xml
