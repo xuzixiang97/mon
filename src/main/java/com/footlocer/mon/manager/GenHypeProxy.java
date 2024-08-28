@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class GenHypeProxy {
 
-    private static final int THREAD_POOL_SIZE = 5000;
+    private static final int THREAD_POOL_SIZE = 8000;
     private static final int TIMEOUT = 500; // in milliseconds
 
     public String genHype() {
@@ -36,7 +36,6 @@ public class GenHypeProxy {
         List<String> proxyList = new ArrayList<>();
         //31.128.114.187:61158:gxdlndjk:rDjS6f881o
         String ip = "31.128.";
-        String user = ":gxdlndjk:rDjS6f881o";
         String username = "gxdlndjk";
         String password = "rDjS6f881o";
 
@@ -45,7 +44,7 @@ public class GenHypeProxy {
                 AtomicBoolean found = new AtomicBoolean(false);
 
                 for (int port = 49200; port < 66000 && !found.get(); port++) {
-                    String proxyAddress = ip + duan + "." + i + ":" + port + user;
+                    String proxyAddress = ip + duan + "." + i + ":" + port + username+ ":" + password;
 
                     int finalPort = port;
                     int finalDuan = duan;
