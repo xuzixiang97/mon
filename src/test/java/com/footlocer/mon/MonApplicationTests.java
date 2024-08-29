@@ -3,6 +3,7 @@ package com.footlocer.mon;
 import cn.hutool.http.HttpUtil;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
+import com.footlocer.mon.manager.GenHypeProxy;
 import com.footlocer.mon.manager.TouchService;
 import com.footlocer.mon.manager.TouchUpdateService;
 import com.footlocer.mon.service.ITouchSkuService;
@@ -42,6 +43,9 @@ class MonApplicationTests {
     @Autowired
     private TouchUpdateService touchUpdateService;
 
+    @Autowired
+    private GenHypeProxy genHypeProxy;
+
     @Test
     void contextLoads() {
 
@@ -62,6 +66,14 @@ class MonApplicationTests {
 
     @Test
     void contextLoads1() {
+        genHypeProxy.genHype();
+    }
+
+    @Test
+    void contextLoads2() {
+        //68.182.247.0:56811:wqbhnujg:9G7gh54uyM
+        boolean wqbhnujg = genHypeProxy.isProxyWorking("68.182.247.0", 56821, "wqbhnujg", "9G7gh54uyM");
+        System.out.println(wqbhnujg);
     }
 
     @Test
