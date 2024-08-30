@@ -1,11 +1,11 @@
 package com.footlocer.mon;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
-import com.footlocer.mon.manager.GenHypeProxy;
-import com.footlocer.mon.manager.TouchService;
-import com.footlocer.mon.manager.TouchUpdateService;
+import com.footlocer.mon.manager.*;
 import com.footlocer.mon.service.ITouchSkuService;
 import com.footlocer.mon.util.ChromeDriverUtil;
 import com.footlocer.mon.util.ExcleUtil;
@@ -26,13 +26,23 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @SpringBootTest
 class MonApplicationTests {
+
+    @Autowired
+    private ItpMonitor itpMonitor;
+
+    @Autowired
+    private ItpMonitorKr itpMonitorKr;
 
     @Autowired
     private TouchService touchService;
@@ -137,6 +147,11 @@ class MonApplicationTests {
     void testupdate() throws IOException, InterruptedException, ApiException {
         List<ShoeExcle> shoeExcles = touchUpdateService.checkGuaShouList();
 
+    }
+
+    @Test
+    void testupdate222()  {
+        itpMonitorKr.monitor();
     }
 
 
