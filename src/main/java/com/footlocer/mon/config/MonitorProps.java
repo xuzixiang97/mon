@@ -1,5 +1,7 @@
 package com.footlocer.mon.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,6 +52,9 @@ public class MonitorProps {
         private int emailTypeId;
         private int buyMode;
         private boolean linkPriority;
+        @Getter
+        @Setter
+        private String productCode; // 例：6021
         // getters/setters ...
         public String getBaseUrl() { return baseUrl; }
         public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }

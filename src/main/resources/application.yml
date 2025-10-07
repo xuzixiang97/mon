@@ -31,12 +31,12 @@ touch:
   user1: 6576f0a3ab7c241855cdc457
 
 mailbuyer:
-  provider: cityline           # 切换目标：gmail500 或 cityline
+  provider: gmail500           # 切换目标：gmail500 或 cityline
 
-  target-total: 10
+  target-total: 1000
   batch-size: 1
-  req-timeout-ms: 5000
-  retry-interval-ms: 5000
+  req-timeout-ms: 3000
+  retry-interval-ms: 3000
   max-attempts-per-batch: 30
   discord-success-webhook: https://discord.com/api/webhooks/1378244046459240539/8GR94xIDsx_YrBs8YhUKvxewCfheLOtjLhEEGNts971Et1mW6fWoc3qifoBvnFqq7eG7
   discord-failure-webhook: https://discord.com/api/webhooks/1421886298729353421/dIREP7DN82yo133cBOhPfls2JWMl8RT7WU7xNsH2-RG9z6r2TKhFA52pTPbMQvc6O81W
@@ -50,9 +50,6 @@ mailbuyer:
     link-priority: true
 
   gmail500:
-    base-url: https://gmail500.com/api/email-code/buy
-    api-key: ${GMAIL500_API_KEY:}      # 不设置时为空，不会崩
-    service-id: 51
-    email-type-id: 3
-    buy-mode: 0
-    link-priority: true
+    base-url: https://emailapi.info/openapi/v2/mail/code/buy
+    api-key: e9688f6f9aa474cd585fd5291ae0d16b26c6822352e99de21306f69f8b6512bb
+    product-code: 6021
