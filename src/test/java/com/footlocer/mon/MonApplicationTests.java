@@ -3,6 +3,7 @@ package com.footlocer.mon;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
 import com.footlocer.mon.manager.*;
@@ -55,6 +56,12 @@ class MonApplicationTests {
 
     @Autowired
     private GenHypeProxy genHypeProxy;
+
+    @Autowired
+    private OrderReportService orderReportService;
+
+    @Autowired
+    private  MailBuyerMonitor mailBuyerMonitor;
 
     @Test
     void contextLoads() {
@@ -150,8 +157,22 @@ class MonApplicationTests {
     }
 
     @Test
-    void testupdate222()  {
-        itpMonitorKr.monitor();
+    void testupdate222() throws JsonProcessingException {
+        mailBuyerMonitor.monitor();
+        System.out.println("hhhh");;
+    }
+
+
+    @Test
+    void testupdate333() throws JsonProcessingException {
+        // 你抓包里的 Bearer token（已替换为你提供的完整值）
+        String bearer = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4dXppeGlhbmc5N0BnbWFpbC5jb20iLCJleHAiOjE3NTg3NzE4MDIsInVzZXJJZCI6MTk3MDcxMTg3NzkyMTYyODE2MSwiaWF0IjoxNzU4NzY0NjAyLCJqdGkiOiI3MjdhOTk4ODQ4OGI0MTAxOGI2NjgwYjE4MmFhMWUwMiJ9.lUJDrEc3jy_h5c_1p6Da_0_Z4eokmMsxAE6IS_Ny4io";
+
+        // 如果接口要求 Cookie，这里把浏览器里复制的一整串 Cookie 放进来；不需要可留空字符串
+        String cookie = "";
+
+        // 导出到项目根目录下的 CSV（也可给绝对路径）
+        orderReportService.exportAllOrdersToCsv("all-orders.csv", bearer, cookie);
     }
 
 

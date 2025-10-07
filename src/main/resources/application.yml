@@ -29,3 +29,30 @@ touch:
   #token user
   token1: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTc2ZjBhM2FiN2MyNDE4NTVjZGM0NTciLCJ1c2VybmFtZSI6IuiKnOa5liIsImlzQWRtaW4iOmZhbHNlLCJhdXRoIjp0cnVlLCJkaXNhYmxlZCI6ZmFsc2UsImlhdCI6MTcxMTgxMTgyNiwiZXhwIjoxNzE0NDAzODI2fQ.93hOqWGz1VymHtj7JHAUjAuK76JmMdC-vwOVrcloSa4
   user1: 6576f0a3ab7c241855cdc457
+
+mailbuyer:
+  provider: cityline           # 切换目标：gmail500 或 cityline
+
+  target-total: 10
+  batch-size: 1
+  req-timeout-ms: 5000
+  retry-interval-ms: 5000
+  max-attempts-per-batch: 30
+  discord-success-webhook: https://discord.com/api/webhooks/1378244046459240539/8GR94xIDsx_YrBs8YhUKvxewCfheLOtjLhEEGNts971Et1mW6fWoc3qifoBvnFqq7eG7
+  discord-failure-webhook: https://discord.com/api/webhooks/1421886298729353421/dIREP7DN82yo133cBOhPfls2JWMl8RT7WU7xNsH2-RG9z6r2TKhFA52pTPbMQvc6O81W
+
+  cityline:
+    base-url: https://api.online-disposablemail.com/api/mailbox
+    api-key: d0cf5b457aa946ef8c0e40bea4cf229e
+    service-id: 51
+    email-type-id: 3
+    buy-mode: 0
+    link-priority: true
+
+  gmail500:
+    base-url: https://gmail500.com/api/email-code/buy
+    api-key: ${GMAIL500_API_KEY:}      # 不设置时为空，不会崩
+    service-id: 51
+    email-type-id: 3
+    buy-mode: 0
+    link-priority: true
