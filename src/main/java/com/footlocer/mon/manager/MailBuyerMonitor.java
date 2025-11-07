@@ -11,11 +11,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.*;
 
-/**
- * 通用邮箱购买监控器
- * 自动根据配置选择 Provider（gmail500 / cityline）
- * 完全兼容 JDK 8
- */
 @Service
 public class MailBuyerMonitor {
 
@@ -26,12 +21,13 @@ public class MailBuyerMonitor {
     @Autowired
     public MailBuyerMonitor(List<EmailCodeProvider> providers, MonitorProps props) {
         this.props = props;
-        String which = props.getProvider() == null ? "" : props.getProvider().toLowerCase();
 
+        String which = props.getProvider();
         EmailCodeProvider chosen = null;
+
         for (EmailCodeProvider p : providers) {
-            String name = p.getClass().getSimpleName().toLowerCase();
-            if (name.contains(which)) {
+            if (which != null && (which.equalsIgnoreCase(p.getClass().getSimpleName())
+                    || p.getClass().getSimpleName().toLowerCase().contains(which.toLowerCase()))) {
                 chosen = p;
                 break;
             }
@@ -41,7 +37,6 @@ public class MailBuyerMonitor {
         System.out.println("👉 当前使用的接口实现：" + provider.getClass().getSimpleName());
     }
 
-    /** 主执行逻辑 */
     public void monitor() {
         int purchasedTotal = 0;
         int batchIndex = 0;
@@ -53,7 +48,7 @@ public class MailBuyerMonitor {
             ProviderResponse resp = buyOneBatchWithRetry(quantity, batchIndex);
             if (resp == null) {
                 sendFailure("任务终止", batchIndex, purchasedTotal, provider.rawBody(null));
-                break;
+                return;
             }
 
             List<ProviderOrder> orders = provider.extractOrders(resp);
@@ -75,27 +70,23 @@ public class MailBuyerMonitor {
                 fields.add(embed("links", "```text\n" + truncate(links, 900) + "\n```", false));
             }
 
-            postDiscord(props.getDiscordSuccessWebhook(),
-                    "✅ 购买成功", "本批购买成功", 0x2ECC71, fields);
+            postDiscord(props.getDiscordSuccessWebhook(), "✅ 购买成功", "本批购买成功", 0x2ECC71, fields);
 
-            // 达标停止
             if (purchasedTotal >= props.getTargetTotal()) {
-                postDiscord(props.getDiscordSuccessWebhook(),
-                        "🎉 任务完成", "累计购买已达成目标。",
+                postDiscord(
+                        props.getDiscordSuccessWebhook(),
+                        "🎉 任务完成",
+                        "累计购买已达成目标。",
                         0x2ECC71,
-                        Collections.singletonList(embed("累计",
-                                purchasedTotal + "/" + props.getTargetTotal(), false)));
+                        Collections.singletonList(embed("累计", purchasedTotal + "/" + props.getTargetTotal(), false))
+                );
                 break;
             }
         }
-
-        System.out.println("🟢 Monitor 结束时间：" + Instant.now());
     }
 
-    /** 批量购买 + 重试 */
     private ProviderResponse buyOneBatchWithRetry(int quantity, int batchIndex) {
         int attempt = 0;
-
         while (attempt < props.getMaxAttemptsPerBatch() && !Thread.currentThread().isInterrupted()) {
             attempt++;
             ProviderResponse resp = null;
@@ -105,21 +96,40 @@ public class MailBuyerMonitor {
                 resp = provider.buy(quantity);
                 raw = resp.getRaw();
 
-                if (resp.getCode() == 200 && !provider.extractOrders(resp).isEmpty()) {
-                    return resp; // ✅ 成功
+                int code = resp.getCode();
+                String msg = safe(resp.getMessage());
+
+                // ✅ 成功返回
+                if (code == 200 && !provider.extractOrders(resp).isEmpty()) {
+                    return resp;
                 }
 
-                sendFailureDetailed(batchIndex, attempt, resp.getCode(), resp.getMessage(), raw);
+                // ❌ 失败处理
+                sendFailureDetailed(batchIndex, attempt, code, msg, raw);
 
-                if (!provider.shouldRetry(resp.getCode())) {
+                // 🔁 检测“库存不足”关键词
+                if (code == -1 && msg.toLowerCase().contains("insufficient stock")) {
+                    System.out.println("⚠️ 库存不足，等待固定间隔重试...");
+                    sleep(props.getRetryIntervalMs()); // 固定间隔重试
+                    continue;
+                }
+
+                // 🔄 其它错误根据 provider 决定是否重试
+                if (!provider.shouldRetry(code)) {
                     return null;
                 }
 
+                // 🕓 其它错误走指数退避
                 sleep(backoff(attempt, props.getRetryIntervalMs(), 120_000));
 
             } catch (Exception e) {
-                sendFailureDetailed(batchIndex, attempt, -1,
-                        e.getClass().getSimpleName() + ": " + safe(e.getMessage()), raw);
+                sendFailureDetailed(
+                        batchIndex,
+                        attempt,
+                        -1,
+                        e.getClass().getSimpleName() + ": " + safe(e.getMessage()),
+                        raw
+                );
                 sleep(backoff(attempt, props.getRetryIntervalMs(), 120_000));
             }
         }
@@ -128,7 +138,7 @@ public class MailBuyerMonitor {
         return null;
     }
 
-    // ====== 公共工具方法 ======
+    /* ================= 工具方法 ================= */
 
     private String buildPreview(List<ProviderOrder> orders, int limit) {
         if (orders == null || orders.isEmpty()) return "";
@@ -138,9 +148,7 @@ public class MailBuyerMonitor {
             ProviderOrder o = orders.get(i);
             sb.append(o.getOrderId()).append(" | ").append(o.getEmail()).append("\n");
         }
-        if (orders.size() > n) {
-            sb.append("... 共 ").append(orders.size()).append(" 条");
-        }
+        if (orders.size() > n) sb.append("... 共 ").append(orders.size()).append(" 条");
         return sb.toString();
     }
 
@@ -159,8 +167,9 @@ public class MailBuyerMonitor {
             embed.put("description", truncate(desc, 2048));
             embed.put("color", color);
             embed.put("timestamp", Instant.now().toString());
-            if (fields != null && !fields.isEmpty()) embed.put("fields", fields);
-
+            if (fields != null && !fields.isEmpty()) {
+                embed.put("fields", fields);
+            }
             Map<String, Object> payload = new HashMap<String, Object>();
             payload.put("embeds", Collections.singletonList(embed));
 
@@ -170,8 +179,7 @@ public class MailBuyerMonitor {
                     .body(json)
                     .timeout(props.getReqTimeoutMs())
                     .execute();
-
-            System.out.println("📣 Webhook HTTP " + r.getStatus() + " " + r.body());
+            System.out.println("📣 Webhook HTTP " + r.getStatus());
         } catch (Exception e) {
             System.out.println("⚠️ 发送 Discord 失败: " + e.getMessage());
         }

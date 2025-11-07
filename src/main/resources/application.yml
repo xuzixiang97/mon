@@ -33,11 +33,11 @@ touch:
 mailbuyer:
   provider: gmail500           # 切换目标：gmail500 或 cityline
 
-  target-total: 1000
+  target-total: 200
   batch-size: 1
-  req-timeout-ms: 3000
-  retry-interval-ms: 3000
-  max-attempts-per-batch: 30
+  req-timeout-ms: 1000
+  retry-interval-ms: 1000
+  max-attempts-per-batch: 1600
   discord-success-webhook: https://discord.com/api/webhooks/1378244046459240539/8GR94xIDsx_YrBs8YhUKvxewCfheLOtjLhEEGNts971Et1mW6fWoc3qifoBvnFqq7eG7
   discord-failure-webhook: https://discord.com/api/webhooks/1421886298729353421/dIREP7DN82yo133cBOhPfls2JWMl8RT7WU7xNsH2-RG9z6r2TKhFA52pTPbMQvc6O81W
 
@@ -53,3 +53,16 @@ mailbuyer:
     base-url: https://emailapi.info/openapi/v2/mail/code/buy
     api-key: e9688f6f9aa474cd585fd5291ae0d16b26c6822352e99de21306f69f8b6512bb
     product-code: 6021
+
+seat:
+  monitor:
+    # 你的日志文件路径
+    logFile: "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\1f9f204d-0f63-41dc-afc1-9480b3eeacb1.log"
+    # Discord Webhook
+    webhook: "https://discord.com/api/webhooks/1434879252792086600/eOgeq4fDDkN5N7TOFCSPcCYstGdeg7_ct7Tmh6uhg8FeaJsQIIMNWakSqSFA2hScyj4i"
+    # 轮询周期（秒）
+    periodSec: 30
+    # 去重缓存大小（条）
+    dedupSize: 2000
+    # Discord 429 限速后重试的毫秒数（兜底）
+    retryMs: 1200

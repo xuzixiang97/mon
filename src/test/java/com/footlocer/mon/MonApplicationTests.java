@@ -4,6 +4,7 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.footlocer.mon.entity.SeatEvent;
 import com.footlocer.mon.entity.ShoeExcle;
 import com.footlocer.mon.entity.TouchSku;
 import com.footlocer.mon.manager.*;
@@ -33,11 +34,15 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @SpringBootTest
 class MonApplicationTests {
+
+    @Autowired
+    private SeatMonitorService seatMonitorService;
 
     @Autowired
     private ItpMonitor itpMonitor;
@@ -62,6 +67,25 @@ class MonApplicationTests {
 
     @Autowired
     private  MailBuyerMonitor mailBuyerMonitor;
+
+    @Autowired
+    private MultiLogSeatManager manager;
+
+    @Test
+    public void testMonitor() throws InterruptedException {
+        manager.setLogFiles(Arrays.asList(
+                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\1f9f204d-0f63-41dc-afc1-9480b3eeacb1.log",
+                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\4f27969c-4ed2-44d0-9843-a27faf4ebcb2.log"
+        ));
+        manager.setWindowMinutes(100);
+        manager.setTailMbPerFile(10);
+
+
+        // 保持进程运行 3 分钟，期间 MultiLogSeatManager 会每 30s tick 一次
+        System.out.println("✅ 已启动监控测试，等待定时任务输出...");
+        Thread.sleep(3 * 60 * 1000);
+    }
+
 
     @Test
     void contextLoads() {
@@ -151,8 +175,13 @@ class MonApplicationTests {
     }
 
     @Test
-    void testupdate() throws IOException, InterruptedException, ApiException {
-        List<ShoeExcle> shoeExcles = touchUpdateService.checkGuaShouList();
+    void testupdate()  {
+        List<String> files = Arrays.asList(
+                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\1f9f204d-0f63-41dc-afc1-9480b3eeacb1.log",
+                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\4f27969c-4ed2-44d0-9843-a27faf4ebcb2.log"
+        );
+        List<SeatEvent> seatEvents = seatMonitorService.readRecentHolds(files);
+        seatMonitorService.pushToDiscord(seatEvents);
 
     }
 

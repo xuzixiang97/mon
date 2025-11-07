@@ -57,11 +57,14 @@ public class Gmail500Provider implements EmailCodeProvider {
         int lastCode = -1;
 
         for (int i = 0; i < Math.max(1, quantity); i++) {
-            HttpResponse r = HttpUtil.createGet(props.getBaseUrl())
+            HttpResponse r = cn.hutool.http.HttpRequest.get(props.getBaseUrl())
                     .form("apiKey", props.getApiKey())
                     .form("productCode", props.getProductCode())
-                    .timeout(5000)
+                    .setConnectionTimeout(2000)   // 建立连接超时 2 秒
+                    .setReadTimeout(3000)         // 响应读取超时 3 秒
+                    .timeout(4000)                // 整体最大 4 秒
                     .execute();
+
 
             String raw = r.body();
             lastRaw = raw;
