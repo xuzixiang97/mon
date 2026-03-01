@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -18,64 +19,78 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
- * 管理层（只改 Manager，不动 SeatMonitorService）：
+ * 管理层：负责定期从多个日志文件中读取数据，处理并去重后输出。
  *
- * 目标：
- * 1) 接收一组日志文件路径（可运行时设置/追加）
- * 2) 按固定周期轮询（本实现：每 10s；如需 30s 改 @Scheduled 即可）
- * 3) 对每个文件：调用 service.readRecentHolds(file, tailMbPerFile) 只读尾部一定大小（MB）
- * 4) 汇总所有文件读到的 SeatEvent，做二次处理：
- *    - 时间过滤：仅保留最近 windowMinutes 分钟内事件（ts 无法解析的事件保留，避免漏报）
- *    - 按“座位（楼层/区/座）”去重：同一座位仅保留时间最新的一条
- * 5) 控制台输出最终结果；如需推送 Discord，在末尾调用 service.pushToDiscord(finalList)
+ * 功能：
+ * 1) 每 10 秒读取一组日志文件的尾部内容，调用 service.readRecentHolds(file, tailMbPerFile)
+ * 2) 将所有文件读取到的 SeatEvent 数据进行二次处理：
+ *    - 时间过滤：仅保留最近 N 分钟内的事件。
+ *    - 按座位（楼层/区/座位）去重，保留最新时间的座位信息。
+ * 3) 最终输出到控制台（包括去重前后的信息），也可以选择推送到 Discord。
  *
- * 说明：
- * - 本类聚焦“调度与整合”，不解析日志文本，解析由 SeatMonitorService 负责。
- * - 为了排障，增加了 tailContainsKeyword 的轻探针，用于判断尾部是否包含关键关键字。
+ * 注：SeatMonitorService 保持不变，仅本类负责调度与整合逻辑。
  */
 @Component
 @EnableScheduling
 public class MultiLogSeatManager {
 
-    /** 解析日志、发送 Discord 的 service（保持不变，由外部注入） */
     private final SeatMonitorService service;
-
-    /** 被轮询的日志文件路径列表（绝对/相对路径均可） */
     private final List<String> logFiles = new ArrayList<>();
+    private volatile int windowMinutes = 100;  // 默认窗口时间：100 分钟
+    private volatile int tailMbPerFile = 10;  // 默认每次读取文件尾部大小：10MB
 
-    /** 过滤窗口：仅保留最近 N 分钟的事件（默认 100 分钟） */
-    private volatile int windowMinutes = 100;
+    private static final DateTimeFormatter BJ_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Shanghai"));
 
-    /** 每次从文件尾部读取的大小（单位：MB；默认 10MB） */
-    private volatile int tailMbPerFile = 10;
+    /** 每个日志文件对应的门票日期（仅用于 Discord 展示） */
+    private final Map<String, String> fileTicketDate = new HashMap<String, String>();
 
-    /** 北京时间格式化，仅用于打印展示 */
-    private static final DateTimeFormatter BJ_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Shanghai"));
+    /** 默认门票日期（如果某个文件没配置，则用它；可为空） */
+    private volatile String defaultTicketDate = "";
 
     public MultiLogSeatManager(SeatMonitorService service) {
         this.service = service;
     }
 
-    /* ===================== 外部注入/运行期控制 ===================== */
+    /* ===================== 外部注入/运行时控制 ===================== */
 
-    /**
-     * 一次性设置日志文件列表（覆盖旧列表）
-     * @param files 日志路径集合；允许为空（表示清空）
-     */
     public synchronized void setLogFiles(Collection<String> files) {
         this.logFiles.clear();
         if (files != null) this.logFiles.addAll(files);
         System.out.println("[MultiLogSeatManager] set " + this.logFiles.size() + " log files.");
-        for (String f : this.logFiles) {
-            System.out.println("  - " + f);
-        }
     }
 
     /**
-     * 运行期追加一个日志文件
-     * @param file 日志路径（空串忽略）
+     * 一次性设置监控文件 + 每个文件的门票日期（覆盖旧配置）
+     * @param fileToDate key=log绝对路径，value=门票日期(展示用)
      */
+    public synchronized void setLogFilesWithDates(Map<String, String> fileToDate) {
+        this.logFiles.clear();
+        this.fileTicketDate.clear();
+
+        if (fileToDate != null) {
+            for (Map.Entry<String, String> e : fileToDate.entrySet()) {
+                String path = (e.getKey() == null) ? "" : e.getKey().trim();
+                if (path.isEmpty()) continue;
+
+                this.logFiles.add(path);
+
+                String date = (e.getValue() == null) ? "" : e.getValue().trim();
+                this.fileTicketDate.put(path, date);
+            }
+        }
+
+        System.out.println("[MultiLogSeatManager] set " + this.logFiles.size() + " log files with ticketDate.");
+        for (String p : this.logFiles) {
+            System.out.println("  - " + p + "  ticketDate=" + nvl(this.fileTicketDate.get(p), "(empty)"));
+        }
+    }
+
+    /** 可选：设置默认门票日期（某些文件没配置时使用） */
+    public void setDefaultTicketDate(String date) {
+        this.defaultTicketDate = (date == null) ? "" : date.trim();
+    }
+
+
     public synchronized void addLogFile(String file) {
         if (file != null && !file.trim().isEmpty()) {
             this.logFiles.add(file.trim());
@@ -83,28 +98,22 @@ public class MultiLogSeatManager {
         }
     }
 
-    /** 设置时间过滤窗口（分钟） */
     public void setWindowMinutes(int minutes) {
         if (minutes > 0) this.windowMinutes = minutes;
     }
 
-    /** 设置每次从文件尾部读取的大小（MB） */
     public void setTailMbPerFile(int mb) {
         if (mb > 0) this.tailMbPerFile = mb;
     }
 
-    /* ========================= 定时任务 ========================= */
+    /* ========================= 定时任务：每 10 秒 ========================= */
 
-    /**
-     * 调度入口：固定延迟（上次执行完毕后等待 10s 再启动）
-     * - 如需固定频率或 30s 周期，改注解即可：@Scheduled(fixedDelay = 30_000L)
-     */
-    @Scheduled(fixedDelay = 10_000L)
+    @Scheduled(fixedDelay = 60_000L)  // 每 10 秒执行一次
     public void tick() {
-        // 打印调度时间（北京时间）
+        // 打印当前调度时间（北京时间）
         System.out.println("[MultiLogSeatManager] tick @ " + BJ_FMT.format(Instant.now()) + " [Asia/Shanghai]");
 
-        // 读取快照，避免遍历时并发修改
+        // 获取当前的文件列表快照，避免并发修改
         List<String> snapshot;
         synchronized (this) {
             snapshot = new ArrayList<>(this.logFiles);
@@ -126,23 +135,16 @@ public class MultiLogSeatManager {
             }
 
             try {
-                // 调用保持不变的 service；注意：这里的 tail 参数是“MB”
+                // 调用保持不变的 service，读取每个文件的尾部
                 List<SeatEvent> list = service.readRecentHolds(f, tailMbPerFile);
+                attachTicketDate(path, list);
                 int got = (list == null) ? 0 : list.size();
-                System.out.println("  • readRecentHolds(" + f.getName() + ", tail=" + tailMbPerFile + "MB) -> " + got);
+                //System.out.println("  • readRecentHolds(" + f.getName() + ", tail=" + tailMbPerFile + "MB) -> " + got);
 
                 if (got == 0) {
-                    // 若没有解析到块，做一次 1MB 的轻探针：是否包含关键字“try to hold seat: [”
-                    boolean hasTryHold = tailContainsKeyword(
-                            f, 1, "(?i)try\\s+(to\\s+)?hold\\s+seat\\s*:\\s*\\["
-                    );
+                    // 若没有解析到块，做一次轻探针：是否包含关键字“try to hold seat: [”
+                    boolean hasTryHold = tailContainsKeyword(f, 1, "(?i)try\\s+(to\\s+)?hold\\s+seat\\s*:\\s*\\[");
                     System.out.println("    └─ tail probe (1MB) contains 'try to hold seat:[' ? " + hasTryHold);
-
-                    // 如果严格关键字也没有，再做一个宽松关键字探测，辅助判断“日志根本没产生”还是“解析规则没命中”
-                    if (!hasTryHold) {
-                        boolean hasLoose = tailContainsKeyword(f, 1, "(?i)hold\\s+seat");
-                        System.out.println("       (loose probe 'hold seat' ? " + hasLoose + ")");
-                    }
                 } else {
                     merged.addAll(list);
                 }
@@ -174,7 +176,7 @@ public class MultiLogSeatManager {
 
         /* ----------------- 二次处理：座位去重 ----------------- */
 
-        // key = floor|block|seat（统一小写；空缺以 "na" 占位）
+        // 去重：只保留同一座位的最新事件
         Map<String, SeatEvent> bestBySeat = new HashMap<>();
         for (SeatEvent e : recent) {
             String key = seatKey(e);
@@ -217,6 +219,28 @@ public class MultiLogSeatManager {
         // 如需推送 Discord，在此处调用（SeatMonitorService 保持不变）
         service.pushToDiscord(finalList);
     }
+
+    private void attachTicketDate(String filePath, List<SeatEvent> list) {
+        if (list == null || list.isEmpty()) return;
+
+        String td = null;
+        synchronized (this) {
+            td = fileTicketDate.get(filePath);
+        }
+        if (td == null || td.trim().isEmpty()) td = defaultTicketDate;
+        if (td == null || td.trim().isEmpty()) return;
+
+        for (SeatEvent e : list) {
+            // 需要 SeatEvent 有 extra: Map<String,Object>
+            Map<String, Object> extra = e.getExtra();
+            if (extra == null) {
+                extra = new LinkedHashMap<String, Object>();
+                e.setExtra(extra);
+            }
+            extra.put("TicketDate", td);
+        }
+    }
+
 
     /* ===================== Manager 内部的轻探针 ===================== */
 

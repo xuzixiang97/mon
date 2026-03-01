@@ -33,9 +33,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SpringBootTest
@@ -73,17 +71,39 @@ class MonApplicationTests {
 
     @Test
     public void testMonitor() throws InterruptedException {
-        manager.setLogFiles(Arrays.asList(
-                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\1f9f204d-0f63-41dc-afc1-9480b3eeacb1.log",
-                "C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\4f27969c-4ed2-44d0-9843-a27faf4ebcb2.log"
-        ));
-        manager.setWindowMinutes(100);
+
+        // ✅ 每个文件绑定自己的 TicketDate（买票日期/批次号）
+        Map<String, String> m = new LinkedHashMap<String, String>();
+
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\1f9f204d-0f63-41dc-afc1-9480b3eeacb1.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\2c616d20-8304-405f-95fa-f5745fc1d721.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\2e5dc02e-0b58-47fa-b45a-1deab3546d04.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\4f27969c-4ed2-44d0-9843-a27faf4ebcb2.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\5a244bcc-91e6-49c7-b3a1-fdc4fa899e89.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\55ac04e0-154c-4ad0-a85c-87cd1f333154.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\86cf2098-6640-4170-bc9e-51bfe692b082.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\134d5e97-75f1-434f-a7ab-1fefec00a7b1.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\327f5d6a-ea31-4942-bb32-b9f2e90e16a9.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\453d30f2-de69-4994-ba20-8d5193c9c123.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\520c73a2-8a6e-4d21-8132-d944d069e3ce.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\975b1949-0fda-4736-972f-8f6fb0576b26.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\8842d665-4635-4a83-934a-58b7524e05b6.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\acfc4b5c-0075-4c72-bf04-3ac1efba64ac.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\c06988d8-7330-4fff-ac0c-b3f5628621fb.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\da69aca6-9330-43e9-8d7d-452a13df1993.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\e16ef1e2-cfb9-4e63-8df5-eb4e2f93a720.log", "20260123-001");
+        m.put("C:\\Users\\Administrator\\AppData\\Roaming\\spider-browser\\logs\\tasks\\f6b17e51-6c50-430f-9e26-b86ddb857adb.log", "20260123-001");
+
+
+        manager.setLogFilesWithDates(m);
+        manager.setWindowMinutes(2);
         manager.setTailMbPerFile(10);
 
+        manager.tick();
 
         // 保持进程运行 3 分钟，期间 MultiLogSeatManager 会每 30s tick 一次
         System.out.println("✅ 已启动监控测试，等待定时任务输出...");
-        Thread.sleep(3 * 60 * 1000);
+        Thread.sleep(1000 * 600 * 1000);
     }
 
 

@@ -212,8 +212,8 @@ public class SeatMonitorService {
 
             // 构造 Discord payload（Hutool 发送）
             Map<String, Object> embed = new LinkedHashMap<String, Object>();
-            embed.put("title", safeLimit("🎯 监控到座位（try to hold seat）", 256));
-            embed.put("description", codeBlock(safeLimit(e.getRaw(), 3800)));
+            embed.put("title", safeLimit("🎯 监控到座位", 256));
+            //embed.put("description", codeBlock(safeLimit(e.getRaw(), 3800)));
             embed.put("timestamp", Instant.now().toString());
             embed.put("color", 0x2ecc71);
 
@@ -222,17 +222,27 @@ public class SeatMonitorService {
             // 🆕 新增：北京时间
             fields.add(field("北京时间", toBeijing(e.getTs()), true));
 
-            fields.add(field("楼层/FloorNo", e.displayFloor(), true));
-            fields.add(field("区/Area(Block)", e.displayBlock(), true));
-            fields.add(field("座位/Seat", e.displaySeat(), true));
+            //fields.add(field("楼层/FloorNo", e.displayFloor(), true));
+            //fields.add(field("区/Area(Block)", e.displayBlock(), true));
+            //fields.add(field("座位/Seat", e.displaySeat(), true));
+            // 🆕 新增：位置Key（你要的格式：S석-232-6-2층-32구역-24）
+            fields.add(field("位置Key", buildSeatKey(e), false));
+
             if (notEmpty(e.getSeatGrade())) fields.add(field("票档/Grade", e.getSeatGrade(), true));
             if (notEmpty(e.getPrice()))     fields.add(field("价格/Price", e.getPrice(), true));
             if (notEmpty(e.getBlockNo()))   fields.add(field("BlockNo", e.getBlockNo(), true));
             if (notEmpty(e.getId()))        fields.add(field("ID", e.getId(), false));
+            if (e.getExtra() != null) {
+                Object td = e.getExtra().get("TicketDate");
+                if (td != null && String.valueOf(td).trim().length() > 0) {
+                    fields.add(field("门票日期", String.valueOf(td), true));
+                }
+            }
+
             if (!fields.isEmpty()) embed.put("fields", fields);
 
             Map<String, Object> payload = new LinkedHashMap<String, Object>();
-            payload.put("content", "🎫 监控到座位（hold 尝试）");
+            payload.put("content", "🎫 监控到座位");
             payload.put("embeds", Collections.singletonList(embed));
 
             try {
@@ -254,6 +264,97 @@ public class SeatMonitorService {
             }
         }
     }
+
+    /**
+     * 生成你要的座位格式：
+     * S석-232-6-2층-32구역-24
+     *
+     * 规则：
+     * - 票档：优先 e.getSeatGrade()，否则从 raw 取 seatGradeName；若为“시야제한 S석”取最后一个 token => “S석”
+     * - blockNo：优先 e.getBlockNo()，否则从 raw 取 blockNo
+     * - seatGrade(数字)：优先从 raw 取 seatGrade
+     * - floor：优先 e.displayFloor()，否则从 raw 取 floor
+     * - 구역：优先 raw 的 rowNo（若已带“구역”直接用）；否则用 area + "구역"
+     * - seatNo：优先 e.displaySeat()，否则从 raw 取 seatNo
+     */
+    private String buildSeatKey(SeatEvent e) {
+        String raw = e.getRaw() == null ? "" : e.getRaw();
+
+        // 1) 票档（S석 / R석 / 시야제한 S석 -> S석）
+        String gradeName = nvlTrim(e.getSeatGrade());
+        if (gradeName.isEmpty()) {
+            gradeName = nvlTrim(extractRaw(raw, "seatGradeName"));
+        }
+        gradeName = lastToken(gradeName);
+
+        // 2) blockNo
+        String blockNo = nvlTrim(e.getBlockNo());
+        if (blockNo.isEmpty()) {
+            blockNo = nvlTrim(extractRaw(raw, "blockNo"));
+        }
+
+        // 3) seatGrade(数字)
+        String seatGradeCode = nvlTrim(extractRaw(raw, "seatGrade"));
+
+        // 4) floor
+        String floor = nvlTrim(e.displayFloor());
+        if (floor.isEmpty() || "na".equalsIgnoreCase(floor)) {
+            floor = nvlTrim(extractRaw(raw, "floor"));
+        }
+
+        // 5) 구역：rowNo 优先；否则 area + "구역"
+        String zone = nvlTrim(extractRaw(raw, "rowNo"));
+        if (zone.isEmpty()) {
+            String area = nvlTrim(e.displayBlock());
+            if (area.isEmpty() || "na".equalsIgnoreCase(area)) {
+                area = nvlTrim(extractRaw(raw, "area"));
+            }
+            if (!area.isEmpty() && !area.endsWith("구역")) {
+                zone = area + "구역";
+            } else {
+                zone = area;
+            }
+        }
+
+        // 6) seatNo
+        String seatNo = nvlTrim(e.displaySeat());
+        if (seatNo.isEmpty() || "na".equalsIgnoreCase(seatNo)) {
+            seatNo = nvlTrim(extractRaw(raw, "seatNo"));
+        }
+
+        // 拼接
+        return gradeName + "-" + blockNo + "-" + seatGradeCode + "-" + floor + "-" + zone + "-" + seatNo;
+    }
+
+    /** 从 raw 文本里抽取类似： key: 'xxx' / key: 123 的值 */
+    private String extractRaw(String raw, String key) {
+        if (raw == null) return "";
+        // 支持：key: 'xxx'  / key: "xxx" / key: 123
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(
+                "\\b" + java.util.regex.Pattern.quote(key) + "\\s*:\\s*(?:'([^']*)'|\"([^\"]*)\"|([^,\\n\\r\\]}]+))"
+        );
+        java.util.regex.Matcher m = p.matcher(raw);
+        if (!m.find()) return "";
+        String v = m.group(1);
+        if (v == null) v = m.group(2);
+        if (v == null) v = m.group(3);
+        return v == null ? "" : v.trim();
+    }
+
+    /** 处理“시야제한 S석”这种，返回最后一个 token：S석 */
+    private String lastToken(String s) {
+        if (s == null) return "";
+        String t = s.trim();
+        if (t.isEmpty()) return "";
+        int i = t.lastIndexOf(' ');
+        return i >= 0 ? t.substring(i + 1).trim() : t;
+    }
+
+    /** null-safe trim */
+    private String nvlTrim(String s) {
+        return s == null ? "" : s.trim();
+    }
+
 
     /** 把 ts（可能是 ISO/Z/带偏移/本地无偏移/UNKNOWN）格式化成“北京时间 yyyy-MM-dd HH:mm:ss” */
     private static String toBeijing(String ts) {
